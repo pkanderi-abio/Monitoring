@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MDR/XDR Alerts</title>
+    <style>
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid black; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>MDR/XDR Alerts</h1>
+    <table id="alerts-table">
+        <tr><th>Timestamp</th><th>Event</th><th>Alerts</th></tr>
+    </table>
+    <script>
+        fetch('http://localhost:8000/alerts')
+            .then(response => response.json())
+            .then(data => {
+                const table = document.getElementById('alerts-table');
+                data.forEach(alert => {
+                    const row = table.insertRow();
+                    row.insertCell().textContent = alert.timestamp;
+                    row.insertCell().textContent = JSON.stringify(alert.event);
+                    row.insertCell().textContent = alert.alerts.join(', ');
+                });
+            });
+    </script>
+</body>
+</html>

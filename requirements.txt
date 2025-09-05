@@ -1,0 +1,9 @@
+numpy
+scikit-learn
+confluent-kafka
+fastapi
+uvicorn
+watchdog
+boto3
+retrying
+slack-sdk

@@ -1,0 +1,32 @@
+name: CI/CD for MDR/XDR Solution
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.12
+    - name: Install dependencies
+      run: pip install -r requirements.txt pytest
+    - name: Run tests
+      run: pytest
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Deploy to AWS ECS
+      uses: amazon-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: task-definition.json
+        service: mdr-xdr-service
+        cluster: mdr-xdr-cluster
+        wait-for-service-stability: true
