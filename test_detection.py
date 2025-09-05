@@ -1,4 +1,5 @@
 import pytest
+import time
 # Make sure the module is in your PYTHONPATH or installed in your environment
 from threat_detection_prod_kafka import rule_based_detect, ml_based_detect, compliance_check
 
