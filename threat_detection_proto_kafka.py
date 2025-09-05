@@ -21,47 +21,44 @@ import boto3
 from io import StringIO
 import csv
 from retrying import retry
-from prometheus_client import Gauge, start_http_server
-import shutil
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Prometheus metrics
-alert_count = Gauge('mdr_alert_count', 'Number of alerts generated', ['severity'])
-start_http_server(8001)
-
-# Configuration from environment variables
-SLACK_WEBHOOK_URL = os.environ.get('SLACK_WEBHOOK_URL', 'your-slack-webhook-url')
+# Configuration
+SLACK_WEBHOOK_URL = 'your-slack-webhook-url'  # Replace with your Slack webhook URL
 EMAIL_CONFIG = {
-    'smtp_server': os.environ.get('SMTP_SERVER', 'smtp.gmail.com'),
-    'smtp_port': int(os.environ.get('SMTP_PORT', 587)),
-    'smtp_username': os.environ.get('SMTP_USERNAME', 'your-email@gmail.com'),
-    'smtp_password': os.environ.get('SMTP_PASSWORD', 'your-app-specific-password'),
-    'to_email': os.environ.get('TO_EMAIL', 'recipient@example.com'),
-    'from_email': os.environ.get('FROM_EMAIL', 'mdr-xdr@example.com')
+    'smtp_server': 'smtp.example.com',  # Replace with your SMTP server
+    'smtp_port': 587,
+    'smtp_username': 'your-username',  # Replace with your SMTP username
+    'smtp_password': 'your-password',  # Replace with your SMTP password
+    'to_email': 'your-email@example.com',  # Replace with recipient email
+    'from_email': 'mdr-xdr@example.com'  # Replace with sender email
 }
 AWS_CONFIG = {
-    'aws_access_key_id': os.environ.get('AWS_ACCESS_KEY_ID', 'your-access-key'),
-    'aws_secret_access_key': os.environ.get('AWS_SECRET_ACCESS_KEY', 'your-secret-key'),
-    'region_name': os.environ.get('AWS_REGION', 'us-east-1')
+    'aws_access_key_id': 'your-access-key',  # Replace with AWS access key
+    'aws_secret_access_key': 'your-secret-key',  # Replace with AWS secret key
+    'region_name': 'us-east-1'  # Replace with your AWS region
 }
-LOG_FILE = os.environ.get('LOG_FILE', '/var/log/auth.log')
-ALERT_FILE = os.environ.get('ALERT_FILE', '/app/alerts.json')
-KAFKA_TOPIC = os.environ.get('KAFKA_TOPIC', 'threat-logs')
+LOG_FILE = os.path.expanduser('~/Tools/Monitoring/test.log')
+ALERT_FILE = os.path.expanduser('~/Tools/Monitoring/alerts.json')
+KAFKA_TOPIC = 'threat-logs'
 KAFKA_CONFIG = {
-    'bootstrap.servers': os.environ.get('KAFKA_BOOTSTRAP_SERVERS', 'kafka:9092'),
-    'group.id': os.environ.get('KAFKA_GROUP_ID', 'threat-group'),
-    'auto.offset.reset': os.environ.get('KAFKA_AUTO_OFFSET_RESET', 'earliest'),
-    'num.partitions': int(os.environ.get('KAFKA_NUM_PARTITIONS', 3)),
-    'replication.factor': int(os.environ.get('KAFKA_REPLICATION_FACTOR', 1))
+    'bootstrap.servers': 'localhost:9092',
+    'group.id': 'threat-group',
+    'auto.offset.reset': 'earliest',
+    'num.partitions': 3,
+    'replication.factor': 1
 }
 
 # FastAPI app
 app = FastAPI()
 
-# HTML dashboard with filters, pagination, severity sorting, and WebSocket
+# WebSocket clients
+websocket_clients = []
+
+# HTML dashboard with filters, pagination, and severity sorting
 HTML_CONTENT = """
 <!DOCTYPE html>
 <html>
@@ -808,19 +805,3 @@ if __name__ == "__main__":
     
     logger.info("MDR/XDR solution shutdown complete.")
     print("MDR/XDR solution shutdown complete.")
-</xaiArtifact>
-
-### Dockerization for Production
-To make the solution production-ready, containerize it with Docker. Save the following as `Dockerfile`:
-
-```dockerfile
-FROM python:3.12-slim
-
-WORKDIR /app
-
-COPY threat_detection_prod_kafka.py /app
-COPY requirements.txt /app
-
-RUN pip install --no-cache-dir -r requirements.txt
-
-CMD ["python", "threat_detection_prod_kafka.py"]
